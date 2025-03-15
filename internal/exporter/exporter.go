@@ -142,11 +142,27 @@ func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool 
 
 func pingTest(ctx context.Context, testUUID string, user *speedtest.User, server *speedtest.Server, ch chan<- prometheus.Metric) bool {
 	log.Info("pingTest 1")
+	var latencySum float64
+	var pingCount int
+
 	err := server.PingTestContext(ctx, func(d time.Duration) {
 		log.Info("pingTest 2")
+		latencySum += d.Seconds()
+		pingCount++
+	})
+
+	log.Info("pingTest 3")
+	if err != nil {
+		log.Errorf("failed to carry out ping test: %s", err.Error())
+		return false
+	}
+
+	// Only emit one metric with the average latency
+	if pingCount > 0 {
 		ch <- prometheus.MustNewConstMetric(
 			latency,
-			prometheus.GaugeValue, float64(d.Seconds()),
+			prometheus.GaugeValue,
+			latencySum/float64(pingCount),
 			testUUID,
 			user.Lat,
 			user.Lon,
@@ -159,12 +175,8 @@ func pingTest(ctx context.Context, testUUID string, user *speedtest.User, server
 			server.Country,
 			fmt.Sprintf("%f", server.Distance),
 		)
-	})
-	log.Info("pingTest 3")
-	if err != nil {
-		log.Errorf("failed to carry out ping test: %s", err.Error())
-		return false
 	}
+
 	log.Info("pingTest 4")
 	return true
 }
