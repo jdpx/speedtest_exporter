@@ -9,4 +9,4 @@ jobs:
       contents: write
       packages: write
     steps:
-      - run: echo "Hello World"
+      - run: echo "Hello World."
