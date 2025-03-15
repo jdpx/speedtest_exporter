@@ -95,14 +95,17 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool {
-	user, err := speedtest.FetchUserInfo()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	user, err := speedtest.FetchUserInfoContext(ctx)
 	if err != nil {
 		log.Errorf("could not fetch user information: %s", err.Error())
 		return false
 	}
 
 	// returns list of servers in distance order
-	serverList, err := speedtest.FetchServerListContext(context.Background())
+	serverList, err := speedtest.FetchServerListContext(ctx)
 	if err != nil {
 		log.Errorf("could not fetch server list: %s", err.Error())
 		return false
@@ -112,7 +115,7 @@ func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool 
 
 	servers, err := serverList.FindServer([]int{e.serverID})
 	if err != nil {
-		log.Error(err)
+		log.Error(fmt.Sprintf("could not find server ID %d: %s", e.serverID, err.Error()))
 		return false
 	}
 
