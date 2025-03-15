@@ -17,7 +17,7 @@ A [Speedtest](https://www.speedtest.net) exporter for Prometheus.
 ![os/arch](https://img.shields.io/badge/os%2Farch-armv7-yellow)
 [![Go Report Card](https://goreportcard.com/badge/github.com/danopstech/speedtest_exporter)](https://goreportcard.com/report/github.com/danopstech/speedtest_exporter)
 
-## Usage:
+## Usage
 
 ### Flags
 
@@ -48,6 +48,7 @@ For pre-built binaries please take a look at the [releases](https://github.com/d
 Docker Images can be found at [GitHub Container Registry](https://github.com/orgs/danopstech/packages/container/package/speedtest_exporter) & [Dockerhub](https://hub.docker.com/r/danopstech/speedtest_exporter).
 
 Example:
+
 ```bash
 docker pull ghcr.io/danopstech/speedtest_exporter:latest
 
@@ -73,7 +74,7 @@ scrape_configs
 ...
 ```
 
-## Exported Metrics:
+## Exported Metrics
 
 ```
 # HELP speedtest_download_speed_Bps Last download speedtest result
@@ -87,9 +88,10 @@ scrape_configs
 # HELP speedtest_upload_speed_Bps Last upload speedtest result
 # TYPE speedtest_upload_speed_Bps gauge
 ```
-## Example Grafana Dashboard:
 
-https://grafana.com/grafana/dashboards/14336
+## Example Grafana Dashboard
+
+<https://grafana.com/grafana/dashboards/14336>
 
 <p align="center">
 	<img src="https://github.com/danopstech/speedtest_exporter/raw/main/.docs/assets/screenshot.jpg" width="95%">
