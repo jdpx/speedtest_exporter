@@ -10,15 +10,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug Info
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Branch name: ${{ github.ref }}"
-          echo "Repository: ${{ github.repository }}"
-
   goreleaser:
     runs-on: ubuntu-latest
     permissions:
