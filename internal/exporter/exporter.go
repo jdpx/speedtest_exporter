@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -101,7 +102,7 @@ func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool 
 	}
 
 	// returns list of servers in distance order
-	serverList, err := speedtest.FetchServerList(user)
+	serverList, err := speedtest.FetchServerListContext(context.Background())
 	if err != nil {
 		log.Errorf("could not fetch server list: %s", err.Error())
 		return false
@@ -109,22 +110,18 @@ func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool 
 
 	var server *speedtest.Server
 
-	if e.serverID == -1 {
-		server = serverList.Servers[0]
-	} else {
-		servers, err := serverList.FindServer([]int{e.serverID})
-		if err != nil {
-			log.Error(err)
-			return false
-		}
-
-		if servers[0].ID != fmt.Sprintf("%d", e.serverID) && !e.serverFallback {
-			log.Errorf("could not find your choosen server ID %d in the list of avaiable servers, server_fallback is not set so failing this test", e.serverID)
-			return false
-		}
-
-		server = servers[0]
+	servers, err := serverList.FindServer([]int{e.serverID})
+	if err != nil {
+		log.Error(err)
+		return false
 	}
+
+	if servers[0].ID != fmt.Sprintf("%d", e.serverID) && !e.serverFallback {
+		log.Errorf("could not find your choosen server ID %d in the list of avaiable servers, server_fallback is not set so failing this test", e.serverID)
+		return false
+	}
+
+	server = servers[0]
 
 	ok := pingTest(testUUID, user, server, ch)
 	ok = downloadTest(testUUID, user, server, ch) && ok
@@ -134,39 +131,42 @@ func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool 
 }
 
 func pingTest(testUUID string, user *speedtest.User, server *speedtest.Server, ch chan<- prometheus.Metric) bool {
-	err := server.PingTest()
+	err := server.PingTest(func(d time.Duration) {
+		ch <- prometheus.MustNewConstMetric(
+			latency,
+			prometheus.GaugeValue, float64(d.Seconds()),
+			testUUID,
+			user.Lat,
+			user.Lon,
+			user.IP,
+			user.Isp,
+			server.Lat,
+			server.Lon,
+			server.ID,
+			server.Name,
+			server.Country,
+			fmt.Sprintf("%f", server.Distance),
+		)
+	})
 	if err != nil {
 		log.Errorf("failed to carry out ping test: %s", err.Error())
 		return false
 	}
 
-	ch <- prometheus.MustNewConstMetric(
-		latency, prometheus.GaugeValue, server.Latency.Seconds(),
-		testUUID,
-		user.Lat,
-		user.Lon,
-		user.IP,
-		user.Isp,
-		server.Lat,
-		server.Lon,
-		server.ID,
-		server.Name,
-		server.Country,
-		fmt.Sprintf("%f", server.Distance),
-	)
-
 	return true
 }
 
 func downloadTest(testUUID string, user *speedtest.User, server *speedtest.Server, ch chan<- prometheus.Metric) bool {
-	err := server.DownloadTest(false)
+	err := server.DownloadTest()
 	if err != nil {
 		log.Errorf("failed to carry out download test: %s", err.Error())
 		return false
 	}
 
 	ch <- prometheus.MustNewConstMetric(
-		download, prometheus.GaugeValue, server.DLSpeed*1024*1024,
+		download,
+		prometheus.GaugeValue,
+		float64(server.DLSpeed*1024*1024),
 		testUUID,
 		user.Lat,
 		user.Lon,
@@ -184,14 +184,16 @@ func downloadTest(testUUID string, user *speedtest.User, server *speedtest.Serve
 }
 
 func uploadTest(testUUID string, user *speedtest.User, server *speedtest.Server, ch chan<- prometheus.Metric) bool {
-	err := server.UploadTest(false)
+	err := server.UploadTest()
 	if err != nil {
 		log.Errorf("failed to carry out upload test: %s", err.Error())
 		return false
 	}
 
 	ch <- prometheus.MustNewConstMetric(
-		upload, prometheus.GaugeValue, server.ULSpeed*1024*1024,
+		upload,
+		prometheus.GaugeValue,
+		float64(server.ULSpeed*1024*1024),
 		testUUID,
 		user.Lat,
 		user.Lon,
