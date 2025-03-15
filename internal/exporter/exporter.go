@@ -116,10 +116,10 @@ func (e *Exporter) speedtest(testUUID string, ch chan<- prometheus.Metric) bool 
 		return false
 	}
 
-	if servers[0].ID != fmt.Sprintf("%d", e.serverID) && !e.serverFallback {
-		log.Errorf("could not find your choosen server ID %d in the list of avaiable servers, server_fallback is not set so failing this test", e.serverID)
-		return false
-	}
+	// if servers[0].ID != fmt.Sprintf("%d", e.serverID) && !e.serverFallback {
+	// 	log.Errorf("could not find your choosen server ID %d in the list of avaiable servers, server_fallback is not set so failing this test", e.serverID)
+	// 	return false
+	// }
 
 	server = servers[0]
 
