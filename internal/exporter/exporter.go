@@ -194,12 +194,12 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		return false
 	}
 	log.Info("downloadTest 2")
-	// server.DLSpeed is in MB/s, convert to B/s
-	// 1 MB = 1,000,000 bytes (using decimal prefix, not binary)
+	// server.DLSpeed is in Mbps (megabits per second)
+	// Convert to bytes per second: Mbps * 1000000 / 8
 	ch <- prometheus.MustNewConstMetric(
 		download,
 		prometheus.GaugeValue,
-		float64(server.DLSpeed*1000000),
+		float64(server.DLSpeed*1000000/8),
 		testUUID,
 		user.Lat,
 		user.Lon,
@@ -224,12 +224,12 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		return false
 	}
 	log.Info("uploadTest 2")
-	// server.ULSpeed is in MB/s, convert to B/s
-	// 1 MB = 1,000,000 bytes (using decimal prefix, not binary)
+	// server.ULSpeed is in Mbps (megabits per second)
+	// Convert to bytes per second: Mbps * 1000000 / 8
 	ch <- prometheus.MustNewConstMetric(
 		upload,
 		prometheus.GaugeValue,
-		float64(server.ULSpeed*1000000),
+		float64(server.ULSpeed*1000000/8),
 		testUUID,
 		user.Lat,
 		user.Lon,
