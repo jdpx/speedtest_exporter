@@ -185,13 +185,11 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		return false
 	}
 
-	// Convert Mbps to Bytes per second (Mbps * 1000000 / 8)
-	dl := float64(server.DLSpeed) * 125000
-
+	// DLSpeed is already in bytes/second as ByteRate
 	ch <- prometheus.MustNewConstMetric(
 		download,
 		prometheus.GaugeValue,
-		dl,
+		float64(server.DLSpeed),
 		testUUID,
 		user.Lat,
 		user.Lon,
@@ -205,7 +203,8 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		fmt.Sprintf("%f", server.Distance),
 	)
 
-	log.Infof("download test completed at %.2f Mbps", server.DLSpeed)
+	// Use built-in Mbps() conversion
+	log.Infof("download test completed at %.2f Mbps", server.DLSpeed.Mbps())
 
 	return true
 }
@@ -217,13 +216,11 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		return false
 	}
 
-	// Convert Mbps to Bytes per second (Mbps * 1000000 / 8)
-	ul := float64(server.ULSpeed) * 125000
-
+	// ULSpeed is already in bytes/second as ByteRate
 	ch <- prometheus.MustNewConstMetric(
 		upload,
 		prometheus.GaugeValue,
-		ul,
+		float64(server.ULSpeed),
 		testUUID,
 		user.Lat,
 		user.Lon,
@@ -237,7 +234,8 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		fmt.Sprintf("%f", server.Distance),
 	)
 
-	log.Infof("upload test completed at %.2f Mbps", server.ULSpeed)
+	// Use built-in Mbps() conversion
+	log.Infof("upload test completed at %.2f Mbps", server.ULSpeed.Mbps())
 
 	return true
 }
