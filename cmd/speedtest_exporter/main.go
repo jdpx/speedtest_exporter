@@ -22,6 +22,8 @@ func main() {
 	serverFallback := flag.Bool("server_fallback", false, "If the server_id given is not available, should we fallback to closest available server")
 	flag.Parse()
 
+	log.SetLevel(log.InfoLevel)
+
 	exporter, err := exporter.New(*serverID, *serverFallback)
 	if err != nil {
 		panic(err)
