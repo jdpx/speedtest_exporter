@@ -74,21 +74,32 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	testUUID := uuid.New().String()
+
+	log.Info("starting speedtest")
+
 	start := time.Now()
 	ok := e.speedtest(testUUID, ch)
 
+	log.Infof("speedtest completed in %s", time.Since(start))
+
 	if ok {
 		ch <- prometheus.MustNewConstMetric(
-			up, prometheus.GaugeValue, 1.0,
+			up,
+			prometheus.GaugeValue,
+			1.0,
 			testUUID,
 		)
 		ch <- prometheus.MustNewConstMetric(
-			scrapeDurationSeconds, prometheus.GaugeValue, time.Since(start).Seconds(),
+			scrapeDurationSeconds,
+			prometheus.GaugeValue,
+			time.Since(start).Seconds(),
 			testUUID,
 		)
 	} else {
 		ch <- prometheus.MustNewConstMetric(
-			up, prometheus.GaugeValue, 0.0,
+			up,
+			prometheus.GaugeValue,
+			0.0,
 			testUUID,
 		)
 	}
@@ -174,10 +185,12 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		return false
 	}
 
+	dl := float64(server.DLSpeed) * 12.5
+
 	ch <- prometheus.MustNewConstMetric(
 		download,
 		prometheus.GaugeValue,
-		float64(server.DLSpeed)*12.5,
+		dl,
 		testUUID,
 		user.Lat,
 		user.Lon,
@@ -190,6 +203,8 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		server.Country,
 		fmt.Sprintf("%f", server.Distance),
 	)
+
+	log.Infof("download test completed at %.2f MB/s", dl/1048576)
 
 	return true
 }
@@ -201,10 +216,12 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		return false
 	}
 
+	ul := float64(server.ULSpeed) * 12.5
+
 	ch <- prometheus.MustNewConstMetric(
 		upload,
 		prometheus.GaugeValue,
-		float64(server.ULSpeed)*12.5,
+		ul,
 		testUUID,
 		user.Lat,
 		user.Lon,
@@ -217,6 +234,8 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		server.Country,
 		fmt.Sprintf("%f", server.Distance),
 	)
+
+	log.Infof("upload test completed at %.2f MB/s", ul/1048576)
 
 	return true
 }
