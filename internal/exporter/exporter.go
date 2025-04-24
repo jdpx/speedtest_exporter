@@ -185,7 +185,8 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		return false
 	}
 
-	dl := float64(server.DLSpeed) * 12.5
+	// Convert Mbps to Bytes per second (Mbps * 1000000 / 8)
+	dl := float64(server.DLSpeed) * 125000
 
 	ch <- prometheus.MustNewConstMetric(
 		download,
@@ -204,7 +205,7 @@ func downloadTest(ctx context.Context, testUUID string, user *speedtest.User, se
 		fmt.Sprintf("%f", server.Distance),
 	)
 
-	log.Infof("download test completed at %.2f MB/s", dl/1048576)
+	log.Infof("download test completed at %.2f Mbps", server.DLSpeed)
 
 	return true
 }
@@ -216,7 +217,8 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		return false
 	}
 
-	ul := float64(server.ULSpeed) * 12.5
+	// Convert Mbps to Bytes per second (Mbps * 1000000 / 8)
+	ul := float64(server.ULSpeed) * 125000
 
 	ch <- prometheus.MustNewConstMetric(
 		upload,
@@ -235,7 +237,7 @@ func uploadTest(ctx context.Context, testUUID string, user *speedtest.User, serv
 		fmt.Sprintf("%f", server.Distance),
 	)
 
-	log.Infof("upload test completed at %.2f MB/s", ul/1048576)
+	log.Infof("upload test completed at %.2f Mbps", server.ULSpeed)
 
 	return true
 }
